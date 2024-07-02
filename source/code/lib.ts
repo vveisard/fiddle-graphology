@@ -2,6 +2,14 @@ import { type SetStoreFunction, type Store } from "solid-js/store";
 import { default as Graph } from "graphology";
 import type { GraphOptions } from "graphology-types";
 
+type Float64 = number;
+
+namespace Float64 {
+  export function getRandomArbitrary(min: Float64, max: Float64): Float64 {
+    return Math.random() * (max - min) + min;
+  }
+}
+
 interface VertexEntityState {
   x: number;
   y: number;
@@ -17,9 +25,96 @@ interface EntityCollectionState<TEntityState> {
   readonly states: Record<string, TEntityState>;
 }
 
+namespace EntityCollectionState {
+  export function create<TEntityState>(
+    entries: ReadonlyArray<readonly [string, TEntityState]>
+  ): EntityCollectionState<TEntityState> {
+    return {
+      ids: entries.map((i) => i[0]),
+      states: Object.fromEntries(entries),
+    };
+  }
+}
+
 interface GraphWorldEntitiesState {
   readonly vertexEntityCollectionState: EntityCollectionState<VertexEntityState>;
   readonly edgeEntityCollectionState: EntityCollectionState<EdgeEntityState>;
+}
+
+namespace GraphWorldEntitiesState {
+  export function createWithRandom(
+    vertexAmount: number,
+    vertexPositionSpreadRangeXMinimum: number,
+    vertexPositionSpreadRangeXMaximum: number,
+    vertexPositionSpreadRangeYMinimum: number,
+    vertexPositionSpreadRangeYMaximum: number
+  ): GraphWorldEntitiesState {
+    const vertexPositions: Array<[number, number]> = Array.from(
+      { length: vertexAmount },
+      () => {
+        const iVertexPositionX = Float64.getRandomArbitrary(
+          vertexPositionSpreadRangeXMinimum,
+          vertexPositionSpreadRangeXMaximum
+        );
+
+        const iVertexPositionY = Float64.getRandomArbitrary(
+          vertexPositionSpreadRangeYMinimum,
+          vertexPositionSpreadRangeYMaximum
+        );
+
+        return [iVertexPositionX, iVertexPositionY] as const;
+      }
+    );
+
+    const edges: Array<readonly [number, number]> = [];
+    for (let i = 0; i < vertexPositions.length; i++) {
+      for (let j = 0; j < vertexPositions.length; j++) {
+        if (i === j) {
+          continue;
+        }
+
+        const doCreateEdge = Math.random() > 0.9;
+        if (!doCreateEdge) {
+          continue;
+        }
+
+        edges.push([i, j]);
+      }
+    }
+
+    const vertexEntityEntries: ReadonlyArray<
+      readonly [string, VertexEntityState]
+    > = vertexPositions.map(
+      (e, i) =>
+        [
+          i.toString(),
+          {
+            x: e[0],
+            y: e[1],
+          },
+        ] as const
+    );
+
+    const edgeEntityEntries: ReadonlyArray<readonly [string, EdgeEntityState]> =
+      edges.map((i) => [
+        `${i[0]}, ${i[1]}`,
+        {
+          sourceNodeEntityId: i[0].toString(),
+          targetNodeEntityId: i[1].toString(),
+        },
+      ]);
+
+    const vertexEntityCollection: EntityCollectionState<VertexEntityState> =
+      EntityCollectionState.create(vertexEntityEntries);
+
+    const edgeEntityCollectionState: EntityCollectionState<EdgeEntityState> =
+      EntityCollectionState.create<EdgeEntityState>(edgeEntityEntries);
+
+    return {
+      edgeEntityCollectionState: edgeEntityCollectionState,
+      vertexEntityCollectionState: vertexEntityCollection,
+    };
+  }
 }
 
 interface GraphWorld {
@@ -32,8 +127,8 @@ interface GraphWorld {
 export {
   type VertexEntityState,
   type EntityCollectionState,
-  type GraphWorldEntitiesState,
   type GraphWorld,
+  GraphWorldEntitiesState,
 };
 
 /**

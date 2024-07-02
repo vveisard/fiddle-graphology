@@ -1,9 +1,9 @@
 import { createStore } from "solid-js/store";
 //
 import {
+  GraphWorldEntitiesState,
   GraphWorldGraph,
   type GraphWorld,
-  type GraphWorldEntitiesState,
 } from "./lib.ts";
 
 const targetCanvas = document.getElementById("target");
@@ -76,30 +76,19 @@ function handleAnimationFrame() {
   renderCanvas();
 }
 
-const [entities, setEntities] = createStore<GraphWorldEntitiesState>({
-  vertexEntityCollectionState: {
-    ids: ["a", "b"],
-    states: {
-      a: {
-        x: 10,
-        y: 10,
-      },
-      b: {
-        x: 25,
-        y: 25,
-      },
-    },
-  },
-  edgeEntityCollectionState: {
-    ids: ["a, b"],
-    states: {
-      ["a, b"]: {
-        sourceNodeEntityId: "a",
-        targetNodeEntityId: "b",
-      },
-    },
-  },
-});
+const firstGraphWorldEntitiesState = GraphWorldEntitiesState.createWithRandom(
+  25,
+  0,
+  1024,
+  0,
+  1024
+);
+
+console.log(JSON.stringify(firstGraphWorldEntitiesState, undefined, 2));
+
+const [entities, setEntities] = createStore<GraphWorldEntitiesState>(
+  firstGraphWorldEntitiesState
+);
 const graphWorld = {
   store: {
     entities: entities,

@@ -1,11 +1,17 @@
-# STORY I want to randomly populate graph world
+# STORY I want a "recalculate layout (random)" button
+
+## DESIGN
+
+This should use the graph randomize layout and assign layout feature
+
+## TODO implement button
 
 ---
 
-# STORY I want a randomize layout button
+# STORY I want a "recalculate layout (physics)" button
 
-## TODO implement "randomize layout" button
+## DESIGN
 
----
+This should use the graphology force layout and assign layout feature
 
-# STORY I want a "force layout" button
+## TODO implement button
