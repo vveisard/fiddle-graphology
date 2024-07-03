@@ -1,10 +1,21 @@
 import { createStore } from "solid-js/store";
+import { random } from "graphology-layout";
+import { assignLayout } from "graphology-layout/utils";
+
 //
 import {
+  Float64,
   GraphWorldEntitiesState,
   GraphWorldGraph,
   type GraphWorld,
 } from "./lib.ts";
+
+const recalculateLayoutRandomButton: HTMLElement | null =
+  document.getElementById("recalculate-layout-random");
+
+if (recalculateLayoutRandomButton === null) {
+  throw new Error(`Invalid state!`);
+}
 
 const targetCanvas = document.getElementById("target");
 if (targetCanvas === null) {
@@ -70,18 +81,32 @@ function renderCanvas(): undefined {
   return undefined;
 }
 
+function clearCanvas() {
+  if (targetCanvasRenderingContext2d === null) {
+    throw new Error(`Invalid state!`);
+  }
+
+  targetCanvasRenderingContext2d.clearRect(
+    0,
+    0,
+    targetCanvasRenderingContext2d.canvas.width,
+    targetCanvasRenderingContext2d.canvas.height
+  );
+}
+
 function handleAnimationFrame() {
   animationFrameTimer = requestAnimationFrame(handleAnimationFrame);
 
+  clearCanvas();
   renderCanvas();
 }
 
 const firstGraphWorldEntitiesState = GraphWorldEntitiesState.createWithRandom(
   25,
   0,
-  1024,
+  512,
   0,
-  1024
+  512
 );
 
 console.log(JSON.stringify(firstGraphWorldEntitiesState, undefined, 2));
@@ -97,5 +122,22 @@ const graphWorld = {
 } satisfies GraphWorld;
 
 const graph = new GraphWorldGraph({}, graphWorld);
+
+function handleRecalculateRandomButtonClick() {
+  // @ts-ignore // TODO fix typing
+  const randomLayout = random(graph, {
+    rng() {
+      return Float64.getRandomArbitrary(0, 512);
+    },
+  });
+
+  // @ts-ignore // TODO fix typing
+  assignLayout(graph, randomLayout);
+}
+
+recalculateLayoutRandomButton.addEventListener(
+  "click",
+  handleRecalculateRandomButtonClick
+);
 
 requestAnimationFrame(handleAnimationFrame);

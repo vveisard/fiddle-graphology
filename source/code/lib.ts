@@ -1,6 +1,10 @@
-import { type SetStoreFunction, type Store } from "solid-js/store";
+import { unwrap, type SetStoreFunction, type Store } from "solid-js/store";
 import { default as Graph } from "graphology";
-import type { GraphOptions } from "graphology-types";
+import type {
+  GraphOptions,
+  NodeIterationCallback,
+  NodeMapper,
+} from "graphology-types";
 
 type Float64 = number;
 
@@ -9,6 +13,8 @@ namespace Float64 {
     return Math.random() * (max - min) + min;
   }
 }
+
+export { Float64 };
 
 interface VertexEntityState {
   x: number;
@@ -158,6 +164,40 @@ class GraphWorldGraph extends Graph<VertexEntityState> {
     return this.#graphWorld.store.entities.edgeEntityCollectionState.states[
       edge as string
     ].targetNodeEntityId;
+  }
+
+  updateEachNodeAttributes(
+    updater: NodeMapper<VertexEntityState, VertexEntityState>,
+    hints?: { attributes?: (keyof VertexEntityState)[] | undefined } | undefined
+  ): void {
+    for (const iNodeId of this.#graphWorld.store.entities
+      .vertexEntityCollectionState.ids) {
+      const iBaseNodeState =
+        this.#graphWorld.store.entities.vertexEntityCollectionState.states[
+          iNodeId
+        ];
+
+      const iNextNodeState = updater(iNodeId, unwrap(iBaseNodeState));
+
+      this.#graphWorld.store.setEntities(
+        "vertexEntityCollectionState",
+        "states",
+        iNodeId,
+        iNextNodeState
+      );
+    }
+  }
+
+  forEachNode(callback: NodeIterationCallback<VertexEntityState>): void {
+    for (const iNodeId of this.#graphWorld.store.entities
+      .vertexEntityCollectionState.ids) {
+      callback(
+        iNodeId,
+        this.#graphWorld.store.entities.vertexEntityCollectionState.states[
+          iNodeId
+        ]
+      );
+    }
   }
 
   getNodeAttribute<AttributeName extends keyof VertexEntityState>(

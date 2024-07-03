@@ -4,5 +4,15 @@
     Hello world!
   </body>
   <script type="module" src="./index.ts"></script>
-  <canvas id="target" width="1024" height="1024"></canvas>
+  <canvas
+    id="target"
+    width="512"
+    height="512"
+    style="image-rendering: pixelated"
+  ></canvas>
+  <div style="display: flex; flex-direction: row">
+    <button type="button" id="recalculate-layout-random">
+      Randomize Layout
+    </button>
+  </div>
 </html>
