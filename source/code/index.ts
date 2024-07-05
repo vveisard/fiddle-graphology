@@ -1,5 +1,6 @@
 import { createStore } from "solid-js/store";
 import { random } from "graphology-layout";
+import forceLayout from "graphology-layout-force";
 import { assignLayout } from "graphology-layout/utils";
 
 //
@@ -14,6 +15,13 @@ const recalculateLayoutRandomButton: HTMLElement | null =
   document.getElementById("recalculate-layout-random");
 
 if (recalculateLayoutRandomButton === null) {
+  throw new Error(`Invalid state!`);
+}
+
+const recalculateLayoutForceButton: HTMLElement | null =
+  document.getElementById("recalculate-layout-force");
+
+if (recalculateLayoutForceButton === null) {
   throw new Error(`Invalid state!`);
 }
 
@@ -123,7 +131,7 @@ const graphWorld = {
 
 const graph = new GraphWorldGraph({}, graphWorld);
 
-function handleRecalculateRandomButtonClick() {
+function handleRecalculateLayoutRandomButtonClick() {
   // @ts-ignore // TODO fix typing
   const randomLayout = random(graph, {
     rng() {
@@ -135,9 +143,30 @@ function handleRecalculateRandomButtonClick() {
   assignLayout(graph, randomLayout);
 }
 
+function handleRecalculateLayoutForceButtonClick() {
+  // @ts-ignore // TODO fix typing
+  const forceLayoutResult = forceLayout(graph, {
+    maxIterations: 1000,
+    settings: {
+      //attraction: 5,
+      repulsion: 5,
+    },
+  });
+
+  console.log(forceLayoutResult);
+
+  // @ts-ignore // TODO fix typing
+  assignLayout(graph, forceLayoutResult);
+}
+
 recalculateLayoutRandomButton.addEventListener(
   "click",
-  handleRecalculateRandomButtonClick
+  handleRecalculateLayoutRandomButtonClick
+);
+
+recalculateLayoutForceButton.addEventListener(
+  "click",
+  handleRecalculateLayoutForceButtonClick
 );
 
 requestAnimationFrame(handleAnimationFrame);

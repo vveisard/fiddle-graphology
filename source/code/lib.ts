@@ -2,8 +2,10 @@ import { unwrap, type SetStoreFunction, type Store } from "solid-js/store";
 import { default as Graph } from "graphology";
 import type {
   GraphOptions,
+  EdgeIterationCallback,
   NodeIterationCallback,
   NodeMapper,
+  NodePredicate,
 } from "graphology-types";
 
 type Float64 = number;
@@ -166,6 +168,20 @@ class GraphWorldGraph extends Graph<VertexEntityState> {
     ].targetNodeEntityId;
   }
 
+  filterNodes(callback: NodePredicate<VertexEntityState>): string[] {
+    return this.#graphWorld.store.entities.vertexEntityCollectionState.ids.filter(
+      (iNodeId) =>
+        callback(
+          iNodeId,
+          unwrap(
+            this.#graphWorld.store.entities.vertexEntityCollectionState.states[
+              iNodeId
+            ]
+          )
+        ) === true
+    );
+  }
+
   updateEachNodeAttributes(
     updater: NodeMapper<VertexEntityState, VertexEntityState>,
     hints?: { attributes?: (keyof VertexEntityState)[] | undefined } | undefined
@@ -200,6 +216,41 @@ class GraphWorldGraph extends Graph<VertexEntityState> {
     }
   }
 
+  forEachEdge(
+    callback: EdgeIterationCallback<VertexEntityState, EdgeEntityState>
+  ): void {
+    for (const iEdgeId of this.#graphWorld.store.entities
+      .edgeEntityCollectionState.ids) {
+      const iEdgeState =
+        this.#graphWorld.store.entities.edgeEntityCollectionState.states[
+          iEdgeId
+        ];
+
+      const iEdgeSourceVertexId = iEdgeState.sourceNodeEntityId;
+      const iEdgeTargetVertexId = iEdgeState.targetNodeEntityId;
+
+      const iEdgeSourceVertexState =
+        this.#graphWorld.store.entities.vertexEntityCollectionState.states[
+          iEdgeSourceVertexId
+        ];
+
+      const iEdgeTargetVertexState =
+        this.#graphWorld.store.entities.vertexEntityCollectionState.states[
+          iEdgeTargetVertexId
+        ];
+
+      callback(
+        iEdgeId,
+        iEdgeState,
+        iEdgeSourceVertexId,
+        iEdgeTargetVertexId,
+        iEdgeSourceVertexState,
+        iEdgeTargetVertexState,
+        true
+      );
+    }
+  }
+
   getNodeAttribute<AttributeName extends keyof VertexEntityState>(
     node: unknown,
     name: AttributeName
@@ -217,6 +268,12 @@ class GraphWorldGraph extends Graph<VertexEntityState> {
         throw new Error(`Not implemented!`);
       }
     }
+  }
+
+  getNodeAttributes(node: unknown): VertexEntityState {
+    return this.#graphWorld.store.entities.vertexEntityCollectionState.states[
+      node as string
+    ];
   }
 
   constructor(graphOptions: GraphOptions, graphWorld: GraphWorld) {
